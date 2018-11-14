@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(tidyr)
+library(vcdExtra)
 
 ```
 
@@ -21,7 +22,18 @@ library(tidyr)
 
 # Read in data and put into tidy format
 
+<<<<<<< HEAD
 lobster_abundance <- read_csv("lobster_size_abundance.csv")
+=======
+lobster_abundance <- read_csv("lobster_size_abundance.csv") %>% 
+  as.data.frame(lobster_abundance) %>% 
+  filter(COUNT != "0") %>% 
+  expand.dft(freq = "COUNT")
+  
+  
+  
+ 
+>>>>>>> dc0c37b7c50db9eab73a9d970eb9811b4b00e2f2
 
 lobster_traps <- read_csv("lobster_traps.csv")
 
