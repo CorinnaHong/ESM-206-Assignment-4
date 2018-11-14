@@ -12,6 +12,19 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 
 library(tidyverse)
+library(tidyr)
+
+```
+
+
+```{r}
+
+# Read in data and put into tidy format
+
+lobster_abundance <- read_csv("lobster_size_abundance.csv") %>% 
+  spread(key = SIZE, value = COUNT)
+
+lobster_traps <- read_csv("lobster_traps.csv")
 
 ```
 
