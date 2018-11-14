@@ -1,0 +1,17 @@
+---
+title: "Assignment 4"
+author: "Corinna Hong"
+date: "November 14, 2018"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(tidyverse)
+
+```
+
