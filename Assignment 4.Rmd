@@ -45,7 +45,7 @@ abundance_summary <- lobster_abundance %>%
   count(YEAR) # Count how many observations there are in each year (data is grouped by site)
 abundance_summary
 
-abundance_col <- ggplot(abundace_summary, aes(x = YEAR, y = n)) +
+abundance_col <- ggplot(abundance_summary, aes(x = YEAR, y = n)) +
   geom_col() +
   facet_wrap(~ SITE)
 abundance_col
