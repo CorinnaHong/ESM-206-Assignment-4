@@ -3,6 +3,7 @@ title: "Assignment 4"
 author: "Corinna Hong"
 date: "November 14, 2018"
 output:
+  word_document: default
   html_document:
     df_print: paged
 ---
@@ -127,6 +128,7 @@ lobster_box
 ```
 
 ```{r}
+
 # Attempt at merging datasets
 
 lobster_counts <- lobster_abundance %>%
@@ -158,4 +160,5 @@ traps_line <- ggplot(traps_counts, aes(x = YEAR, y = sum, group = SITE)) +
 
 traps_line
 ```
+
 
