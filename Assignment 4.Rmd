@@ -2,7 +2,10 @@
 title: "Assignment 4"
 author: "Corinna Hong"
 date: "November 14, 2018"
-output: word_document
+output:
+  word_document: default
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -114,7 +117,7 @@ lobster_ph
 
 ```
 
-Mean lobster size for Adelie (mean ± sd, n = ), Gentoo (mean ± sd, n = ), and Chinstrap (mean ± sd, n =) penguins all differed significantly across all groups by one-way ANOVA (F(`r aov2$parameter`) = `r aov2$statistic`, *p* < 0.001, $\alpha$ = 0.05) with post-hoc pairwise comparison by Bonferroni correction (p < 0.001 for all pairwise comparisons).
+
 
 ```{r}
 
@@ -130,12 +133,37 @@ lobster_box
 ```
 
 ```{r}
-# Create dataframes for each site and within that df group by year. Calculate the annual total of site per year. 
 
+# Attempt at merging datasets
 
+lobster_counts <- lobster_abundance %>%
+  group_by(SITE, YEAR) %>% 
+  summarize(
+    count = length(SIZE)
+  )
 
+lobster_line <- ggplot(lobster_counts, aes(x = YEAR, y = count, group = SITE)) + 
+  geom_line(aes(linetype = SITE, color = SITE))+
+  theme_classic()+
+  geom_point(aes(color = SITE))+
+  labs(x = "Year", y = "Lobster Abundance")
+  
+lobster_line
+  
+traps_counts <- lobster_traps %>% 
+  group_by(SITE, YEAR) %>% 
+  summarize(
+    sum = sum(TRAPS))
 
+traps_counts
+
+traps_line <- ggplot(traps_counts, aes(x = YEAR, y = sum, group = SITE)) + 
+  geom_line(aes(linetype = SITE, color = SITE))+
+  theme_classic()+
+  geom_point(aes(color = SITE))+
+  labs(x = "Year", y = "Traps Adundance")
+
+traps_line
 ```
-
 
 
