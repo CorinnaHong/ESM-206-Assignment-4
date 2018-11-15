@@ -31,7 +31,7 @@ lobster_abundance <- read_csv("lobster_size_abundance.csv") %>%
   select(YEAR, MONTH, DATE, SITE, SIZE)
 
 lobster_traps <- read_csv("lobster_traps.csv") %>%
-  filter(SITE == "IVEE"| SITE == "IVEE"|SITE =="NAPL" |SITE == "AQUE"|SITE == "CARP" |SITE == "MOHK") %>% 
+  filter(SITE == "IVEE"|SITE =="NAPL" |SITE == "AQUE"|SITE == "CARP" |SITE == "MOHK") %>% 
   select(YEAR, MONTH, DATE, SITE, TRAPS)
 
 ```
@@ -69,10 +69,11 @@ trap_col
 2. Compare mean lobster size by site in 2017 
 
 ```{r}
-# QUestion: Is there a significant difference in mean lobster size between the five sites
 
-#H0: THere is no significant difference in mean lobster size between the five sites
-#HA: There is a significant difference in mean lobster size between the five sites
+# Question: Is there a significant difference in mean lobster size between the five sites?
+
+# H0: There is no significant difference in mean lobster size between the five sites
+# HA: There is a significant difference in mean lobster size between the five sites
 
 # One-way ANOVA: We should use a one-way ANOVA, and need to test for normality (sample sizes are over 30 so we can use the central limit theorem) and equal variance (levene's test)
 
@@ -80,9 +81,17 @@ size_2017 <- lobster_abundance %>%
   filter(YEAR == 2017) %>% 
   select(SITE, SIZE)
 
-##Levene's Test:
+# Levene's Test:
 
-## DO LEVENE'S TEST HERE
+# H0: There are no differences in varance across groups (variances are equal)
+# HA: There are differences in variances across groups (variances are not equal)
+
+lobster_levene <- leveneTest(SIZE ~ SITE, data = size_2017)
+lobster_levene
+
+# p < 0.05. Reject the null hypothesis. Our variances are differenct (Variances are not equal)
+
+# What are the actual variances?
 
 variances <- size_2017 %>% 
   group_by(SITE) %>% 
@@ -92,12 +101,9 @@ variances <- size_2017 %>%
     variance = var(SIZE)
   )
 
-lobster_levene <- leveneTest(SIZE ~ SITE, data = size_2017)
-lobster_levene
-  
-# ?? Are variances equal? 
+# Our largest variance is less than 4x larger than our smallest variance
 
-#ONE-WAY ANOVA:
+# ONE-WAY ANOVA:
 
 lobster_aov <- aov(SIZE ~ SITE, data = size_2017)
 lobster_sum_aov <- summary(lobster_aov)
@@ -105,7 +111,6 @@ lobster_sum_aov
 
 lobster_ph <- TukeyHSD(lobster_aov)
 lobster_ph
-
 
 ```
 
