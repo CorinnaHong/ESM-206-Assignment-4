@@ -70,6 +70,7 @@ trap_col
 
 ```{r}
 # QUestion: Is there a significant difference in mean lobster size between the five sites
+
 #H0: THere is no significant difference in mean lobster size between the five sites
 #HA: There is a significant difference in mean lobster size between the five sites
 
@@ -102,12 +103,24 @@ lobster_aov <- aov(SIZE ~ SITE, data = size_2017)
 lobster_sum_aov <- summary(lobster_aov)
 lobster_sum_aov
 
+lobster_ph <- TukeyHSD(lobster_aov)
+lobster_ph
+
 
 ```
 
 Mean lobster size for Adelie (mean ± sd, n = ), Gentoo (mean ± sd, n = ), and Chinstrap (mean ± sd, n =) penguins all differed significantly across all groups by one-way ANOVA (F(`r aov2$parameter`) = `r aov2$statistic`, *p* < 0.001, $\alpha$ = 0.05) with post-hoc pairwise comparison by Bonferroni correction (p < 0.001 for all pairwise comparisons).
 
 ```{r}
+
+lobster_box <- ggplot(size_2017, aes(x = SITE, y = SIZE)) +
+  geom_boxplot(aes(fill = SITE, colour = SITE), alpha = 0.5, show.legend = FALSE) +
+  ylab("Mean Lobster Size (mm)") +
+  ggtitle("Lobster Sizes by Site (2017)") +
+  xlab("Site") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"))
+lobster_box
 
 ```
 
