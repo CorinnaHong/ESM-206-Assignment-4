@@ -14,6 +14,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(tidyr)
 library(vcdExtra)
+library(car)
+library(onewaytests)
 
 ```
 
@@ -61,6 +63,51 @@ trap_col <- ggplot(trap_summary, aes(x = YEAR, y = n)) +
   geom_col() +
   facet_wrap(~ SITE)
 trap_col
+
+```
+
+2. Compare mean lobster size by site in 2017 
+
+```{r}
+# QUestion: Is there a significant difference in mean lobster size between the five sites
+#H0: THere is no significant difference in mean lobster size between the five sites
+#HA: There is a significant difference in mean lobster size between the five sites
+
+# One-way ANOVA: We should use a one-way ANOVA, and need to test for normality (sample sizes are over 30 so we can use the central limit theorem) and equal variance (levene's test)
+
+size_2017 <- lobster_abundance %>% 
+  filter(YEAR == 2017) %>% 
+  select(SITE, SIZE)
+
+##Levene's Test:
+
+## DO LEVENE'S TEST HERE
+
+variances <- size_2017 %>% 
+  group_by(SITE) %>% 
+  summarize(
+    mean = mean(SIZE),
+    sd = sd(SIZE),
+    variance = var(SIZE)
+  )
+
+lobster_levene <- leveneTest(SIZE ~ SITE, data = size_2017)
+lobster_levene
+  
+# ?? Are variances equal? 
+
+#ONE-WAY ANOVA:
+
+lobster_aov <- aov(SIZE ~ SITE, data = size_2017)
+lobster_sum_aov <- summary(lobster_aov)
+lobster_sum_aov
+
+
+```
+
+Mean lobster size for Adelie (mean ± sd, n = ), Gentoo (mean ± sd, n = ), and Chinstrap (mean ± sd, n =) penguins all differed significantly across all groups by one-way ANOVA (F(`r aov2$parameter`) = `r aov2$statistic`, *p* < 0.001, $\alpha$ = 0.05) with post-hoc pairwise comparison by Bonferroni correction (p < 0.001 for all pairwise comparisons).
+
+```{r}
 
 ```
 
