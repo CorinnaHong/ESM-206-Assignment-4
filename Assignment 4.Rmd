@@ -18,7 +18,7 @@ library(vcdExtra)
 ```
 
 
-```{r}
+```{r, include = FALSE}
 
 # Read in data and put into tidy format
 
@@ -28,7 +28,8 @@ lobster_abundance <- read_csv("lobster_size_abundance.csv") %>%
   expand.dft(freq = "COUNT") %>% # Give each lobster observation its own row
   select(YEAR, MONTH, DATE, SITE, SIZE)
 
-lobster_traps <- read_csv("lobster_traps.csv") %>% 
+lobster_traps <- read_csv("lobster_traps.csv") %>%
+  filter(SITE == "IVEE"| SITE == "IVEE"|SITE =="NAPL" |SITE == "AQUE"|SITE == "CARP" |SITE == "MOHK") %>% 
   select(YEAR, MONTH, DATE, SITE, TRAPS)
 
 ```
@@ -48,6 +49,18 @@ abundance_col <- ggplot(abundace_summary, aes(x = YEAR, y = n)) +
   geom_col() +
   facet_wrap(~ SITE)
 abundance_col
+
+# Create graphs of trap buoys versus year at each site
+
+trap_summary <- lobster_traps %>% 
+  group_by(SITE) %>% 
+  count(YEAR) # Count how many observations there are in each year (data is grouped by site)
+trap_summary
+
+trap_col <- ggplot(trap_summary, aes(x = YEAR, y = n)) +
+  geom_col() +
+  facet_wrap(~ SITE)
+trap_col
 
 ```
 
