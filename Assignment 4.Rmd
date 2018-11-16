@@ -12,7 +12,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r, message=FALSE, echo=FALSE}
 
 library(tidyverse)
 library(tidyr)
@@ -147,12 +147,14 @@ lobster_ph
 ```
 
 
+
 ```{r}
 
 lobster_box <- ggplot(size_2017, aes(x = SITE, y = SIZE)) +
   geom_boxplot(aes(fill = SITE, colour = SITE), alpha = 0.5, show.legend = FALSE) +
   ylab("Mean Lobster Size (mm)") +
   ggtitle("Lobster Sizes by Site (2017)") +
+  theme(plot.title = element_text(hjust = 0.5)) +
   xlab("Site") +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"))
@@ -160,9 +162,11 @@ lobster_box
 
 ```
 
+
+
 ```{r}
 
-# Attempt at merging datasets
+# Created separate datasets to attempt to merge them. 
 
 lobster_counts <- lobster_abundance %>%
   group_by(SITE, YEAR) %>% 
@@ -193,5 +197,12 @@ traps_line <- ggplot(traps_counts, aes(x = YEAR, y = sum, group = SITE)) +
 
 traps_line
 ```
+
+
+
+
+
+
+
 
 
