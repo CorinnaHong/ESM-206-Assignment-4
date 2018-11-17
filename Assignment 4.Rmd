@@ -202,7 +202,7 @@ size_2012_hist
 
 # QQ-Plots
 
-<<<<<<< HEAD
+
 
 
 
@@ -210,21 +210,18 @@ size_2012_hist
 abundance_traps_line <- abundance_traps_line + geom_line(aes(y = TRAPS, color = SITE), show.legend = FALSE) + 
   geom_point(aes(y = TRAPS, color = SITE), show.legend = FALSE)
 abundance_traps_line
-=======
+
 size_2012_qq <- ggplot(size_2012, aes(sample = SIZE)) +
   geom_qq() +
   facet_wrap(~ SITE, scale = "free") + # Create a Q-Q plot, split graphic visualization by site. Give each Q-Q Plot its own y-axis scale
   theme_classic()
 size_2012_qq
->>>>>>> d08e56537e416c4a92ea75a058965737af68d37a
 
-
-<<<<<<< HEAD
 
 ```
-=======
->>>>>>> d08e56537e416c4a92ea75a058965737af68d37a
 
+
+```{r}
 # Question: How do lobster sizes in 2012 and 2017 compare?
 
 # H0: There is no difference in mean lobster size in 2012 and 2017
@@ -260,6 +257,8 @@ MPA_ttest <- t.test(MPA_2012$SIZE, MPA_2017$SIZE, var.equal = TRUE)
 MPA_ttest
 
 #
+
+```
 
 ```
 
