@@ -2,10 +2,7 @@
 title: "Assignment 4"
 author: "Corinna Hong"
 date: "November 14, 2018"
-output:
-  word_document: default
-  html_document:
-    df_print: paged
+output: word_document
 ---
 
 ```{r setup, include=FALSE}
@@ -40,36 +37,46 @@ lobster_traps <- read_csv("lobster_traps.csv") %>%
 
 ```
 
-
 1. Lobster abundance and fishing pressure (2012 - 2017)
 
-```{r}
+```{r, echo = FALSE, fig.height = 15, fig.width = 20}
 
-# Create five graphs of each location with years on the x-axis and count of lobsters on y-axis
+# Create new datasets that group by site and then year. Total up # of obs for lobster measurements and sum number of traps
 
-abundance_summary <- lobster_abundance %>% 
-  group_by(SITE) %>% 
-  count(YEAR) # Count how many observations there are in each year (data is grouped by site)
-abundance_summary
+lobster_counts <- lobster_abundance %>%
+  group_by(SITE, YEAR) %>% 
+  summarize(
+    COUNT = length(SIZE)
+  )
+  
+traps_counts <- lobster_traps %>% 
+  group_by(SITE, YEAR) %>% 
+  summarize(
+    TRAPS = sum(TRAPS))
 
-abundance_col <- ggplot(abundance_summary, aes(x = YEAR, y = n)) +
-  geom_col() +
-  facet_wrap(~ SITE)
-abundance_col
 
-# Create graphs of trap buoys versus year at each site
+# Merge data sets
+abundance_traps <- full_join(lobster_counts, traps_counts) 
 
-trap_summary <- lobster_traps %>% 
-  group_by(SITE) %>% 
-  count(YEAR) # Count how many observations there are in each year (data is grouped by site)
-trap_summary
+# Graph first set of data (number of lobsters)
+abundance_traps_line <- ggplot(abundance_traps, aes(x = YEAR, y = COUNT)) + 
+  geom_line(aes(color = "COUNT")) +
+  geom_point() +
+  facet_wrap(~SITE, scale = "free") +
+  labs(x = "Year", y = "Count") +
+  theme_classic() +
+  theme(text = element_text(family="sans")) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) + # rotate x-axis and move labels down
+  theme(panel.spacing = unit(3, "lines"))
+  
 
-trap_col <- ggplot(trap_summary, aes(x = YEAR, y = n)) +
-  geom_col() +
-  facet_wrap(~ SITE)
-trap_col
+# Add the second data set (number of traps)
+abundance_traps_line <- abundance_traps_line + geom_line(aes(y = TRAPS, color = "TRAPS")) + 
+  geom_point(aes(y = TRAPS))
+abundance_traps_line
 
 ```
+
 
 2. Compare mean lobster size by site in 2017 
 
@@ -88,7 +95,7 @@ size_2017 <- lobster_abundance %>%
 #Histograms
 
 size_2017_hist <- ggplot(size_2017, aes(x = SIZE)) +
-  geom_histogram() +
+  geom_histogram(bins = 12) +
   facet_wrap(~ SITE, scale = "free") + # Create a histogram, split graphic visualization by site. Give each histogram its own y-axis scale
   theme_classic()
 size_2017_hist
@@ -151,6 +158,7 @@ lobster_ph
 
 
 ```{r}
+# Box and whisker
 
 lobster_box <- ggplot(size_2017, aes(x = SITE, y = SIZE)) +
   geom_boxplot(aes(fill = SITE, colour = SITE), alpha = 0.5, show.legend = FALSE) +
@@ -160,60 +168,41 @@ lobster_box <- ggplot(size_2017, aes(x = SITE, y = SIZE)) +
   xlab("Site") +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"))
-lobster_box
+lobster_box # Need to add a way to indicate significance
+
+# Column graph of means 
+
+lobster_col <- ggplot(variances, aes (x = SITE, y = mean)) +
+  geom_col() +
+  scale_y_continuous()
+lobster_col
 
 ```
 
-
-
 ```{r}
 
-# Created separate datasets to attempt to merge them. 
+# New data frame for year 2012
 
-lobster_counts <- lobster_abundance %>%
-  group_by(SITE, YEAR) %>% 
-  summarize(
-    COUNT = length(SIZE)
-  )
+size_2012 <- lobster_abundance %>% 
+  filter(YEAR == 2012) %>% 
+  select(SITE, SIZE) 
 
-lobster_line <- ggplot(lobster_counts, aes(x = YEAR, y = COUNT, group = SITE)) + 
-  geom_line(aes(linetype = SITE, color = SITE))+
-  theme_classic()+
-  geom_point(aes(color = SITE))+
-  labs(x = "Year", y = "Lobster Abundance")
-  
-lobster_line
-  
-traps_counts <- lobster_traps %>% 
-  group_by(SITE, YEAR) %>% 
-  summarize(
-    TRAPS = sum(TRAPS))
 
-traps_counts
 
-traps_line <- ggplot(traps_counts, aes(x = YEAR, y = TRAPS, group = SITE)) + 
-  geom_line(aes(linetype = SITE, color = SITE))+
-  theme_classic()+
-  geom_point(aes(color = SITE))+
-  labs(x = "Year", y = "Traps Adundance")
+# Data exploration
 
-traps_line
-```
+#Histograms
 
-Merging and creating a graph with both sets of data on it
-```{r}
+size_2012_hist <- ggplot(size_2012, aes(x = SIZE)) +
+  geom_histogram(bins = 12) +
+  facet_wrap(~ SITE, scale = "free") + # Create a histogram, split graphic visualization by site. Give each histogram its own y-axis scale
+  theme_classic()
+size_2012_hist
 
-#Merge data sets
-abundance_traps <- full_join(lobster_counts, traps_counts) 
 
-# Graph first set of data (abundance)
-abundance_traps_line <- ggplot(abundance_traps, aes(x = YEAR, y = COUNT)) + 
-  geom_line(aes(color = SITE), show.legend = FALSE) +
-  geom_point(aes(color = SITE), show.legend = FALSE) +
-  facet_wrap(~SITE) +
-  theme_classic() +
-  labs(x = "Year", y = "Annual Lobster Adundance")
+# QQ-Plots
 
+<<<<<<< HEAD
 
 
 
@@ -221,15 +210,56 @@ abundance_traps_line <- ggplot(abundance_traps, aes(x = YEAR, y = COUNT)) +
 abundance_traps_line <- abundance_traps_line + geom_line(aes(y = TRAPS, color = SITE), show.legend = FALSE) + 
   geom_point(aes(y = TRAPS, color = SITE), show.legend = FALSE)
 abundance_traps_line
+=======
+size_2012_qq <- ggplot(size_2012, aes(sample = SIZE)) +
+  geom_qq() +
+  facet_wrap(~ SITE, scale = "free") + # Create a Q-Q plot, split graphic visualization by site. Give each Q-Q Plot its own y-axis scale
+  theme_classic()
+size_2012_qq
+>>>>>>> d08e56537e416c4a92ea75a058965737af68d37a
 
-# Need to change colors to distinguish between which line is abundance (lower one) and which are traps (higher one)
 
+<<<<<<< HEAD
 
 ```
+=======
+>>>>>>> d08e56537e416c4a92ea75a058965737af68d37a
+
+# Question: How do lobster sizes in 2012 and 2017 compare?
+
+# H0: There is no difference in mean lobster size in 2012 and 2017
+# HA: There is a difference in mean lobster size in 2012 and 2017
+
+# New dataframes with only MPA sites for 2012 and 2017
+
+MPA_2012 <- size_2012 %>%
+  filter(SITE == "IVEE" | SITE == "NAPL")
+MPA_2012
+
+MPA_2017 <- size_2017 %>%
+  filter(SITE == "IVEE" | SITE == "NAPL")
+MPA_2017
+
+
+# F-test for equal variances:
+
+# H0: Variances are equal
+# HA: Variances are not equal
+
+f_test <- var.test(MPA_2012$SIZE, MPA_2017$SIZE)
+
+f_test
+
+# p = 0.33, retain the null. Variacnes are equal.
 
 
 
+# Two-sided t-test
 
+MPA_ttest <- t.test(MPA_2012$SIZE, MPA_2017$SIZE, var.equal = TRUE)
+MPA_ttest
 
+#
 
+```
 
