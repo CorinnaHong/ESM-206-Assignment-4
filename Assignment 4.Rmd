@@ -179,6 +179,8 @@ lobster_col
 
 ```
 
+3. Changes in Lobster Size at MPA and non-MPA sites (2012 and 2017)
+
 ```{r}
 
 # New data frame for year 2012
@@ -202,15 +204,6 @@ size_2012_hist
 
 # QQ-Plots
 
-
-
-
-
-# Add the second data set (traps)
-abundance_traps_line <- abundance_traps_line + geom_line(aes(y = TRAPS, color = SITE), show.legend = FALSE) + 
-  geom_point(aes(y = TRAPS, color = SITE), show.legend = FALSE)
-abundance_traps_line
-
 size_2012_qq <- ggplot(size_2012, aes(sample = SIZE)) +
   geom_qq() +
   facet_wrap(~ SITE, scale = "free") + # Create a Q-Q plot, split graphic visualization by site. Give each Q-Q Plot its own y-axis scale
@@ -224,8 +217,11 @@ size_2012_qq
 ```{r}
 # Question: How do lobster sizes in 2012 and 2017 compare?
 
-# H0: There is no difference in mean lobster size in 2012 and 2017
-# HA: There is a difference in mean lobster size in 2012 and 2017
+
+#MPAs
+
+# H0: There is no difference in mean lobster size in 2012 and 2017 in MPAs
+# HA: There is a difference in mean lobster size in 2012 and 2017 in MPAs
 
 # New dataframes with only MPA sites for 2012 and 2017
 
@@ -236,6 +232,7 @@ MPA_2012
 MPA_2017 <- size_2017 %>%
   filter(SITE == "IVEE" | SITE == "NAPL")
 MPA_2017
+
 
 
 # F-test for equal variances:
@@ -251,13 +248,49 @@ f_test
 
 
 
-# Two-sided t-test
+# Two-sided t-test for MPAs
 
 MPA_ttest <- t.test(MPA_2012$SIZE, MPA_2017$SIZE, var.equal = TRUE)
 MPA_ttest
 
-#
+# p = 0.056. Retain the null.
 
+
+
+# Non-MPAS
+
+# H0: There is no difference in mean lobster size in 2012 and 2017 in non-MPAs
+# HA: There is a difference in mean lobster size in 2012 and 2017 in non-MPAs
+
+
+# New data frams with only non-MPA sites
+
+nMPA_2012 <- size_2012 %>%
+  filter(SITE == "CARP" | SITE == "AQUE" | SITE == "MOHK")
+nMPA_2012
+
+nMPA_2017 <- size_2017 %>%
+  filter(SITE == "CARP" | SITE == "AQUE" | SITE == "MOHK")
+nMPA_2017
+
+# F-test for equal variances:
+
+# H0: Variances are equal
+# HA: Variances are not equal
+
+f_test2 <- var.test(nMPA_2012$SIZE, nMPA_2017$SIZE)
+
+f_test2
+
+# p = 0.95, retain the null. Variances are equal.
+
+
+# two sided t-test for non-MPAs
+
+nMPA_ttest <- t.test(nMPA_2012$SIZE, nMPA_2017$SIZE, var.equal = TRUE)
+nMPA_ttest
+
+# p = 0.007. Reject the null.
 ```
 
 ```
