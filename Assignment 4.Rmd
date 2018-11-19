@@ -22,6 +22,8 @@ library(onewaytests)
 library(gridExtra)
 library(kableExtra)
 library(effsize)
+library(ggplot2)
+library(ggsignif)
 
 
 ```
@@ -62,7 +64,7 @@ traps_counts <- lobster_traps %>%
 
 
 # Merge data sets
-suppressWarnings(abundance_traps <- full_join(lobster_counts, traps_counts)) 
+suppressWarnings(abundance_traps <- full_join(lobster_counts, traps_counts))
 
 # Graph first set of data (number of lobsters)
 abundance_traps_line <- ggplot(abundance_traps, aes(x = YEAR, y = COUNT)) + 
@@ -71,14 +73,15 @@ abundance_traps_line <- ggplot(abundance_traps, aes(x = YEAR, y = COUNT)) +
   facet_wrap(~SITE, scale = "free", nrow = 3, ncol = 2) +
   labs(x = "Year", y = "Count") +
   theme_classic() +
-  theme(text = element_text(family="sans")) +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) + # rotate x-axis and move labels down
-  theme(axis.text = element_text(size = 12), axis.title = element_text(size = 12)) +
-  theme(legend.text=element_text(size=12)) +
+  theme(axis.text = element_text(size = 15), axis.title = element_text(size = 15)) +
+  theme(legend.text=element_text(size=15)) +
   theme(legend.title=element_blank()) +
   theme(panel.spacing = unit(3, "lines")) +
   theme(strip.text = element_text(size = 10, margin = margin())) +
-  scale_color_manual(values = c("skyblue", "skyblue4"))
+  scale_color_manual(values = c("skyblue", "skyblue4"))+
+  theme(strip.text.x = element_text(size = 15))
+  
 
 # Add the second data set (number of traps)
 abundance_traps_line <- abundance_traps_line + geom_line(aes(y = TRAPS, color = "TRAPS")) + 
@@ -151,7 +154,7 @@ variances <- size_2017 %>%
   ) %>% 
   arrange(c("AQUE", "CARP", "MOHK", "IVEE", "NAPL")) 
 
-variance_table <- kable(variances, align = rep('c', 6), caption = "**Table 1. Summary statistics of mean lobster size (mm) by site in 2017.** Mean, standard deviation and variance of lobster carapace length collected at sites in the Santa Barbara Channel. Arroyo Quemado (AQUE), Carpinteria (CARP), and Mohawk Reef (MOHK) are non-marine protected areas. Isla Vista (IVEE) and Naples Reef (NAPL) are marien protected areas. Data source: Reed, D. 2017. SBC LTER: Reef: Abundance, size and fishing effort for California Spiny Lobster (Panulirus interruptus), ongoing since 2012. Santa Barbara Coastal Long Term Ecological Research Project. doi:10.6073/pasta/81ce20b29614ec99d85d54907eaa3e8e", col.names = c("Site", "Mean", "Standard Deviation", "Variance", "Sample Size")) %>% # Use kable on the table, center numeric data, give it a caption, rename columns
+variance_table <- kable(variances, align = rep('c', 6), caption = "**Table 1. Summary statistics of mean lobster size (mm) by site in 2017.** Mean, standard deviation and variance of lobster carapace length collected at sites in the Santa Barbara Channel. Arroyo Quemado (AQUE), Carpinteria (CARP), and Mohawk Reef (MOHK) are non-marine protected areas. Isla Vista (IVEE) and Naples Reef (NAPL) are marine protected areas. Data source: Reed, D. 2017. SBC LTER: Reef: Abundance, size and fishing effort for California Spiny Lobster (Panulirus interruptus), ongoing since 2012. Santa Barbara Coastal Long Term Ecological Research Project. doi:10.6073/pasta/81ce20b29614ec99d85d54907eaa3e8e", col.names = c("Site", "Mean", "Standard Deviation", "Variance", "Sample Size")) %>% # Use kable on the table, center numeric data, give it a caption, rename columns
   kable_styling(bootstrap_options = c("striped","hover", "condensed"), full_width = F) %>% 
   column_spec(1, width = "10em", bold = T) %>% 
   column_spec(2, width = "10em") %>% 
@@ -173,26 +176,36 @@ lobster_aov <- aov(SIZE ~ SITE, data = size_2017)
 lobster_sum_aov <- summary(lobster_aov)
 
 
+
+
+
 lobster_ph <- TukeyHSD(lobster_aov)
+
+
 
 
 ```
 
 
 
-```{r, message = FALSE, fig.align= "center"}
+```{r, message = FALSE, echo = FALSE, fig.align= "center"}
 
 # Column graph of means 
 
 lobster_col <- ggplot(variances, aes (x = SITE, y = mean)) +
-  geom_col() +
-  scale_y_continuous(expand = c(0,0)) +
-  theme_classic()
+  geom_col(fill = "skyblue") +
+  geom_errorbar(aes(ymin = mean-sd, ymax = mean + sd, width = .1))+
+  labs(x = "Site", y = "Mean Carapace Length (mm)")+
+  scale_y_continuous(expand = c(0,0), limits = c(0,110)) +
+  geom_signif(y_position = c(93,100), xmin = c(2,3), xmax = c(5,5), annotation = c("p = 0.023", "p = 0.004"), tip_length = .1, size = .5, textsize = 3) +
+  theme_classic()+
+  theme(legend.position = "none")
 lobster_col
 
 ```
 
-
+**Figure 2. Mean lobster size (mm) by site in 2017.** Mean carapace length (mm) of lobsters measured at five different locations: Arroyo Quemado (AQUE, n = 67), Carpinteria (CARP, n = 705), Isla Vista (IVEE, n = 606), Mohawk Reef (MOHK, n = 178) and Naples Reef (NAPL, n = 112). Error bars indicate ± 1 standard deviation. Mean carapace length only differed significantly between CARP and NAPL, and IVEE and NAPL while all other pairwise comparisons
+yielded no significant difference (one-way ANOVA, F(4) = 3.424, p = 0.0085) with post-hoc Tukey’s HSD (α = 0.05). Brackets indicate significant differences between sites with respective p-values. Data source: Reed, D. 2017. SBC LTER: Reef: Abundance, size and fishing effort for California Spiny Lobster (Panulirus interruptus), ongoing since 2012. Santa Barbara Coastal Long Term Ecological Research Project. doi:10.6073/pasta/81ce20b29614ec99d85d54907eaa3e8e.
 
 ```{r, include = FALSE}
 
@@ -262,10 +275,10 @@ MPA_boxplot <- ggplot(MPA, aes(x=SITE, y= SIZE)) +
   scale_x_discrete(limits = c("AQUE", "CARP", "MOHK", "IVEE", "NAPL")) +
   xlab( "Site")+
   ylab(" Carapace Length (mm)")+
-  ggtitle( "Size Distribution of Lobsters at MPA and Non-MPA Sites in the Santa Barbara Channel")+
-  scale_fill_discrete(name ="Protected Status")+
+    scale_fill_discrete(name ="Protected Status")+
   scale_fill_manual(values = c("skyblue", "skyblue4"))+
-  theme(panel.spacing = unit(2, "lines"))
+  theme(panel.spacing = unit(2, "lines"))+
+  theme(legend.title=element_blank())
 
 MPA_boxplot
 
@@ -286,6 +299,7 @@ f_test <- var.test(MPA_2012$SIZE, MPA_2017$SIZE)
 # Two-sided t-test for MPAs
 
 MPA_ttest <- t.test(MPA_2012$SIZE, MPA_2017$SIZE, var.equal = TRUE)
+
 
 # p = 0.056. Retain the null.
 
@@ -345,7 +359,7 @@ nMPA_2 <- MPA_2017 %>%
 effect_size <- cohen.d(nMPA_1, nMPA_2) 
 
 ```
-**Figure 2. Lobster size at MPA and non-MPA sites between 2012 and 2017.** Carapace length (mm) of California spiny lobster (*Panulirus interruptus*) 
+**Figure 3. Lobster size at MPA and non-MPA sites between 2012 and 2017.** Carapace length (mm) of California spiny lobsters (*Panulirus interruptus*) at each site. Shading represents samples taken from marine protected areas and non-marine protected areas. Data source: Reed, D. 2017. SBC LTER: Reef: Abundance, size and fishing effort for California Spiny Lobster (Panulirus interruptus), ongoing since 2012. Santa Barbara Coastal Long Term Ecological Research Project. doi:10.6073/pasta/81ce20b29614ec99d85d54907eaa3e8e.
 
 ```{r, echo =FALSE, message = FALSE}
 
@@ -364,20 +378,21 @@ legal_lobster_table <- legal_lobster %>%
   arrange(c("AQUE", "CARP", "MOHK", "IVEE", "NAPL"))
   
 
-
-
 suppressWarnings(rownames(legal_lobster_table) <- c("AQUE", "CARP", "MOHK", "IVEE", "NAPL"))
+
+lobster_prop <- round(prop.table(as.matrix(legal_lobster_table), 1), 2)
+lobster_prop
 
 # Chi- sqaured test
 
 chi_test <- chisq.test(legal_lobster_table)
 
 
-chi_table <- kable(legal_lobster_table, align = rep('c', 6), caption = "**Table 2. Proportion of Observed Lobsters Above the Legal Carapace Length (82.6 mm)** Data source: Reed, D. . 2017. SBC LTER: Reef: Abundance, size and fishing effort for California Spiny Lobster (Panulirus interruptus), ongoing since 2012. Santa Barbara Coastal Long Term Ecological Research Project. doi:10.6073/pasta/81ce20b29614ec99d85d54907eaa3e8e", col.names = c("Legal", "Not Legal")) %>% # Use kable on the table, center numeric data, give it a caption, rename columns
+chi_table <- kable(lobster_prop, align = rep('c', 6), caption = "**Table 2. Proportion of observed lobsters above the legal carapace length** Lobsters with a carapace length of 82.6 mm or above are considered legal and can be trapped. There is a significant difference in proportions of observed lobsters above the legal minimum across all five sites (*X^2^* = 18.497, df = 4, p < .001). Shading represents samples taken from marine protected areas and non-marine protected areas. Data source: Reed, D. 2017. SBC LTER: Reef: Abundance, size and fishing effort for California Spiny Lobster (Panulirus interruptus), ongoing since 2012. Santa Barbara Coastal Long Term Ecological Research Project. doi:10.6073/pasta/81ce20b29614ec99d85d54907eaa3e8e", col.names = c("Legal", "Not Legal")) %>% # Use kable on the table, center numeric data, give it a caption, rename columns
   kable_styling(bootstrap_options = c("striped","hover", "condensed"), full_width = F) %>% 
-  column_spec(1, width = "10em", bold = T) %>% 
-  column_spec(2, width = "10em") %>% 
-  column_spec(3, width = "10em") %>% 
+  column_spec(1, width = "15em", bold = T) %>% 
+  column_spec(2, width = "15em") %>% 
+  column_spec(3, width = "15em") %>% 
   row_spec(4:5, bold = T, color = "white", background = "grey")
 chi_table
  
