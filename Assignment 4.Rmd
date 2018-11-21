@@ -2,10 +2,8 @@
 title: "Assignment 4"
 author: "Corinna Hong"
 date: "November 14, 2018"
-output:
-  html_document:
-    df_print: paged
-  word_document: default
+output: html_document
+
 ---
 
 ```{r setup, include=FALSE}
@@ -24,7 +22,6 @@ library(kableExtra)
 library(effsize)
 library(ggplot2)
 library(ggsignif)
-
 
 ```
 
@@ -46,8 +43,7 @@ lobster_traps <- read_csv("lobster_traps.csv") %>%
 ```
 
 
-
-```{r, echo = FALSE, message= FALSE, warnings = FALSE, fig.align = "center", fig.width= 15, fig.height = 10}
+```{r, echo = FALSE, message = FALSE, warnings = FALSE, fig.align = "center", fig.width= 12, fig.height = 10}
 
 # Create new datasets that group by site and then year. Total up # of obs for lobster measurements and sum number of traps
 
@@ -64,9 +60,12 @@ traps_counts <- lobster_traps %>%
 
 
 # Merge data sets
+
 suppressWarnings(abundance_traps <- full_join(lobster_counts, traps_counts))
 
+
 # Graph first set of data (number of lobsters)
+
 abundance_traps_line <- ggplot(abundance_traps, aes(x = YEAR, y = COUNT)) + 
   geom_line(aes(color = "COUNT")) +
   geom_point() +
@@ -84,6 +83,7 @@ abundance_traps_line <- ggplot(abundance_traps, aes(x = YEAR, y = COUNT)) +
   
 
 # Add the second data set (number of traps)
+
 abundance_traps_line <- abundance_traps_line + geom_line(aes(y = TRAPS, color = "TRAPS")) + 
   geom_point(aes(y = TRAPS))
 abundance_traps_line
@@ -92,7 +92,7 @@ abundance_traps_line
 **Figure 1. Lobster Adundance and Fishing Pressure from 2012-2017.** Abundance (count) and fishing pressure (traps) per year for each of the five Long-Term Ecological Research (LTER) Sites in the Santa Barbara Channel. Abundance data was collected by divers in the late summer before the start of the fishing season and fishing pressure was determined by counting the number of commercial trap floats. Trap data was collected during the lobster fishing season. Data source: Reed, D. 2017. SBC LTER: Reef: Abundance, size and fishing effort for California Spiny Lobster (Panulirus interruptus), ongoing since 2012. Santa Barbara Coastal Long Term Ecological Research Project. doi:10.6073/pasta/81ce20b29614ec99d85d54907eaa3e8e
 
 
-```{r, echo = FALSE, message = FALSE, fig.align= "center"}
+```{r, include = FALSE}
 
 # New dataframe for only year 2017
 
@@ -121,7 +121,10 @@ size_2017_qq <- ggplot(size_2017, aes(sample = SIZE)) +
   theme_classic()
 
 
+```
 
+
+```{r, include = FALSE}
 
 # Question: Is there a significant difference in mean lobster size between the five sites?
 
@@ -132,7 +135,7 @@ size_2017_qq <- ggplot(size_2017, aes(sample = SIZE)) +
 
 # Levene's Test 
 
-# H0: There are no differences in varance across groups (variances are equal)
+# H0: There are no differences in variance across groups (variances are equal)
 # HA: There are differences in variances across groups (variances are not equal)
 
 lobster_levene <- leveneTest(SIZE ~ SITE, data = size_2017)
@@ -144,7 +147,40 @@ lobster_levene <- leveneTest(SIZE ~ SITE, data = size_2017)
 
 # What are the actual variances?
 
-variances <- size_2017 %>% 
+variance_table <- size_2017 %>% 
+  group_by(SITE) %>% 
+  summarize(
+    variance = var(SIZE)
+  )
+variance_table 
+
+# Our largest variance (IVEE 205.06) is less than 4x larger than our smallest variance (86.12)
+# We can say that these variances are similar enough to run an ANOVA
+
+
+# ONE-WAY ANOVA:
+
+lobster_aov <- aov(SIZE ~ SITE, data = size_2017)
+lobster_sum_aov <- summary(lobster_aov)
+lobster_sum_aov
+
+# Which ones are significantly different?
+
+lobster_ph <- TukeyHSD(lobster_aov)
+lobster_ph
+
+```
+
+Lobster carapace length (mm) differed significantly in the five sitess studied (one-way ANOVA,
+F(4,1663) = 3.424, p < 0.009; Table 1). Tukey’s HSD revealed that
+carapace length at Naples Reef differed significantly from Isla Vista (pairwise p = 0.004) and Carpinteria (pairwise p = 0.02). The actual difference in mean carapace length between Naples Reef and Isla Vista is 4.78 mm. The difference in mean carapace length between NAples Reef and Carpinteria is 4 mm.
+
+
+```{r, echo = FALSE, fig.align = "center"}
+
+# Create a summary table for size 2017 data
+
+size_2017_summary <- size_2017 %>% 
   group_by(SITE) %>%
     summarize(
     mean = round(mean(SIZE), 2),
@@ -154,7 +190,7 @@ variances <- size_2017 %>%
   ) %>% 
   arrange(c("AQUE", "CARP", "MOHK", "IVEE", "NAPL")) 
 
-variance_table <- kable(variances, align = rep('c', 6), caption = "**Table 1. Summary statistics of mean lobster size (mm) by site in 2017.** Mean, standard deviation and variance of lobster carapace length collected at sites in the Santa Barbara Channel. Arroyo Quemado (AQUE), Carpinteria (CARP), and Mohawk Reef (MOHK) are non-marine protected areas. Isla Vista (IVEE) and Naples Reef (NAPL) are marine protected areas. Data source: Reed, D. 2017. SBC LTER: Reef: Abundance, size and fishing effort for California Spiny Lobster (Panulirus interruptus), ongoing since 2012. Santa Barbara Coastal Long Term Ecological Research Project. doi:10.6073/pasta/81ce20b29614ec99d85d54907eaa3e8e", col.names = c("Site", "Mean", "Standard Deviation", "Variance", "Sample Size")) %>% # Use kable on the table, center numeric data, give it a caption, rename columns
+summary_table <- kable(size_2017_summary, align = rep('c', 6), caption = "**Table 1. Summary statistics of lobster size (mm) by site in 2017.** Mean, standard deviation and variance of lobster carapace length collected at sites in the Santa Barbara Channel. Arroyo Quemado (AQUE), Carpinteria (CARP), and Mohawk Reef (MOHK) are non-marine protected areas. Isla Vista (IVEE) and Naples Reef (NAPL) are marine protected areas. Data source: Reed, D. 2017. SBC LTER: Reef: Abundance, size and fishing effort for California Spiny Lobster (Panulirus interruptus), ongoing since 2012. Santa Barbara Coastal Long Term Ecological Research Project. doi:10.6073/pasta/81ce20b29614ec99d85d54907eaa3e8e", col.names = c("Site", "Mean", "Standard Deviation", "Variance", "Sample Size")) %>% # Use kable on the table, center numeric data, give it a caption, rename columns
   kable_styling(bootstrap_options = c("striped","hover", "condensed"), full_width = F) %>% 
   column_spec(1, width = "10em", bold = T) %>% 
   column_spec(2, width = "10em") %>% 
@@ -163,36 +199,16 @@ variance_table <- kable(variances, align = rep('c', 6), caption = "**Table 1. Su
   column_spec(5, width = "10em") %>% 
   row_spec(4:5, bold = T, color = "white", background = "grey")
   
-  
-variance_table
-
-# Our largest variance is less than 4x larger than our smallest variance
-
-
-
-# ONE-WAY ANOVA:
-
-lobster_aov <- aov(SIZE ~ SITE, data = size_2017)
-lobster_sum_aov <- summary(lobster_aov)
-
-
-
-
-
-lobster_ph <- TukeyHSD(lobster_aov)
-
-
-
+summary_table # It it does not show all vlaues in preview, it should when knitted
 
 ```
 
 
-
-```{r, message = FALSE, echo = FALSE, fig.align= "center"}
+```{r, echo = FALSE, fig.align= "center"}
 
 # Column graph of means 
 
-lobster_col <- ggplot(variances, aes (x = SITE, y = mean)) +
+lobster_col <- ggplot(size_2017_summary, aes (x = SITE, y = mean)) +
   geom_col(fill = "skyblue") +
   geom_errorbar(aes(ymin = mean-sd, ymax = mean + sd, width = .1))+
   labs(x = "Site", y = "Mean Carapace Length (mm)")+
@@ -239,11 +255,12 @@ size_2012_qq
 ```
 
 
-```{r, echo = FALSE, message = FALSE, fig.align = "center"}
+```{r, include = FALSE}
+
 # Question: How do lobster sizes in 2012 and 2017 compare?
 
 
-#MPAs
+# MPAs
 
 # H0: There is no difference in mean lobster size in 2012 and 2017 in MPAs
 # HA: There is a difference in mean lobster size in 2012 and 2017 in MPAs
@@ -258,39 +275,14 @@ MPA_2017 <- size_2017 %>%
   filter(SITE == "IVEE" | SITE == "NAPL")
 
 
-MPA <- lobster_abundance  %>% 
-  filter(YEAR == "2012" | YEAR == "2017") %>% 
-  mutate(protected = case_when(
-    SITE == "IVEE" ~ "MPA",
-    SITE == "NAPL" ~ "MPA",
-    SITE == "AQUE" ~ "Non-MPA",
-    SITE == "CARP" ~ "Non-MPA",
-    SITE == "MOHK" ~ "Non-MPA"
-  ))
 
-MPA_boxplot <- ggplot(MPA, aes(x=SITE, y= SIZE)) +
-  geom_boxplot(aes(fill = protected))+
-  facet_wrap(~ YEAR) +
-  theme_classic()+
-  scale_x_discrete(limits = c("AQUE", "CARP", "MOHK", "IVEE", "NAPL")) +
-  xlab( "Site")+
-  ylab(" Carapace Length (mm)")+
-    scale_fill_discrete(name ="Protected Status")+
-  scale_fill_manual(values = c("skyblue", "skyblue4"))+
-  theme(panel.spacing = unit(2, "lines"))+
-  theme(legend.title=element_blank())
-
-MPA_boxplot
-
-
-# F-test for equal variances:
+# F-test for equal variances
 
 # H0: Variances are equal
 # HA: Variances are not equal
 
 f_test <- var.test(MPA_2012$SIZE, MPA_2017$SIZE)
-
-
+f_test
 
 # p = 0.33, retain the null. Variacnes are equal.
 
@@ -299,24 +291,26 @@ f_test <- var.test(MPA_2012$SIZE, MPA_2017$SIZE)
 # Two-sided t-test for MPAs
 
 MPA_ttest <- t.test(MPA_2012$SIZE, MPA_2017$SIZE, var.equal = TRUE)
-
+MPA_ttest
 
 # p = 0.056. Retain the null.
 
-## Cohen's D
 
 
-  
-first <- MPA_2012 %>%
+# Cohen's D
+
+mpa_1 <- MPA_2012 %>%
   pull(SIZE) 
 
-second <- MPA_2017 %>% 
+mpa_2 <- MPA_2017 %>% 
   pull(SIZE) 
 
-effect_size <- cohen.d(first, second) 
+mpa_effect_size <- cohen.d(mpa_1, mpa_2) 
+mpa_effect_size
+
+# Cohen's d = -0.3461506 (small)
 
 
-## t-test results with cohen's d 
 
 
 # Non-MPAS
@@ -333,13 +327,15 @@ nMPA_2012 <- size_2012 %>%
 nMPA_2017 <- size_2017 %>%
   filter(SITE == "CARP" | SITE == "AQUE" | SITE == "MOHK")
 
-# F-test for equal variances:
+
+
+# F-test for equal variances
 
 # H0: Variances are equal
 # HA: Variances are not equal
 
 f_test2 <- var.test(nMPA_2012$SIZE, nMPA_2017$SIZE)
-
+f_test2
 
 # p = 0.95, retain the null. Variances are equal.
 
@@ -347,8 +343,13 @@ f_test2 <- var.test(nMPA_2012$SIZE, nMPA_2017$SIZE)
 # two sided t-test for non-MPAs
 
 nMPA_ttest <- t.test(nMPA_2012$SIZE, nMPA_2017$SIZE, var.equal = TRUE)
+nMPA_ttest
 
 # p = 0.007. Reject the null.
+
+
+
+# Cohen's d
 
 nMPA_1 <- MPA_2012 %>%
   pull(SIZE) 
@@ -356,20 +357,54 @@ nMPA_1 <- MPA_2012 %>%
 nMPA_2 <- MPA_2017 %>% 
   pull(SIZE)
 
-effect_size <- cohen.d(nMPA_1, nMPA_2) 
+nmpa_effect_size <- cohen.d(nMPA_1, nMPA_2) 
+nmpa_effect_size
+
+# Cohen's d = -0.346 (small)
 
 ```
+
+
+```{r, echo = FALSE, message = FALSE, fig.align = "center"}
+
+# Boxplots of carapace length at each site in 2012 and 2017
+
+MPA <- lobster_abundance  %>% 
+  filter(YEAR == "2012" | YEAR == "2017") %>% 
+  mutate(protected = case_when(
+    SITE == "IVEE" ~ "MPA",
+    SITE == "NAPL" ~ "MPA",
+    SITE == "AQUE" ~ "Non-MPA",
+    SITE == "CARP" ~ "Non-MPA",
+    SITE == "MOHK" ~ "Non-MPA"
+  ))
+
+MPA_boxplot <- ggplot(MPA, aes(x=SITE, y= SIZE)) +
+  geom_boxplot(aes(fill = protected))+
+  facet_wrap(~ YEAR) +
+  theme_classic()+
+  scale_x_discrete(limits = c("AQUE", "CARP", "MOHK", "IVEE", "NAPL")) +
+  xlab("Site")+
+  ylab("Carapace Length (mm)")+
+  scale_fill_discrete(name ="Protected Status")+
+  scale_fill_manual(values = c("skyblue", "skyblue4"))+
+  theme(panel.spacing = unit(2, "lines"))+
+  theme(legend.title=element_blank())
+
+MPA_boxplot
+
+```
+
 **Figure 3. Lobster size at MPA and non-MPA sites between 2012 and 2017.** Carapace length (mm) of California spiny lobsters (*Panulirus interruptus*) at each site. Shading represents samples taken from marine protected areas and non-marine protected areas. Data source: Reed, D. 2017. SBC LTER: Reef: Abundance, size and fishing effort for California Spiny Lobster (Panulirus interruptus), ongoing since 2012. Santa Barbara Coastal Long Term Ecological Research Project. doi:10.6073/pasta/81ce20b29614ec99d85d54907eaa3e8e.
 
-```{r, echo =FALSE, message = FALSE}
 
-### QUESTION 4:
+```{r, include = FALSE}
+
+# reworking data frame to create a contingency table
 
 legal_lobster <- lobster_abundance %>%
   mutate(size = ifelse(SIZE <= 82.6, "Not Legal", "Legal")) %>% 
   filter( YEAR == "2017")
-
-
 
 legal_lobster_table <- legal_lobster %>% 
   count(SITE, size) %>% 
@@ -377,16 +412,28 @@ legal_lobster_table <- legal_lobster %>%
   select(-SITE) %>% 
   arrange(c("AQUE", "CARP", "MOHK", "IVEE", "NAPL"))
   
-
 suppressWarnings(rownames(legal_lobster_table) <- c("AQUE", "CARP", "MOHK", "IVEE", "NAPL"))
 
-lobster_prop <- round(prop.table(as.matrix(legal_lobster_table), 1), 2)
+lobster_prop <- round(prop.table(as.matrix(legal_lobster_table), 1), 2) # creating a table or proportions
 lobster_prop
+
+
 
 # Chi- sqaured test
 
-chi_test <- chisq.test(legal_lobster_table)
+# H0: Proportion of legal and non legal lobsters do not differ across groups
+# HA: Proportion of legal and non legal lobsters differ across groups
 
+chi_test <- chisq.test(legal_lobster_table)
+chi_test
+
+# x2 (4) = 18.497. p < 0.001. Reject the null
+
+```
+
+```{r, echo = FALSE, fig.align = "center"}
+
+# Table of proportions
 
 chi_table <- kable(lobster_prop, align = rep('c', 6), caption = "**Table 2. Proportion of observed lobsters above the legal carapace length** Lobsters with a carapace length of 82.6 mm or above are considered legal and can be trapped. There is a significant difference in proportions of observed lobsters above the legal minimum across all five sites (*X^2^* = 18.497, df = 4, p < .001). Shading represents samples taken from marine protected areas and non-marine protected areas. Data source: Reed, D. 2017. SBC LTER: Reef: Abundance, size and fishing effort for California Spiny Lobster (Panulirus interruptus), ongoing since 2012. Santa Barbara Coastal Long Term Ecological Research Project. doi:10.6073/pasta/81ce20b29614ec99d85d54907eaa3e8e", col.names = c("Legal", "Not Legal")) %>% # Use kable on the table, center numeric data, give it a caption, rename columns
   kable_styling(bootstrap_options = c("striped","hover", "condensed"), full_width = F) %>% 
@@ -395,8 +442,6 @@ chi_table <- kable(lobster_prop, align = rep('c', 6), caption = "**Table 2. Prop
   column_spec(3, width = "15em") %>% 
   row_spec(4:5, bold = T, color = "white", background = "grey")
 chi_table
- 
 
 ```
-
 
